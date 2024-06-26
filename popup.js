@@ -23,11 +23,15 @@ document.getElementById('trackForm').addEventListener('submit', (e) => {
 
 function displayTrackedUrls() {
   chrome.storage.local.get(['trackedUrls', 'priceData'], (result) => {
+    console.log("Tracked URLs:", result.trackedUrls);  // Debugging line to see what's fetched
+    console.log("Price Data:", result.priceData);     // Debugging line to see price data
+
     const trackedUrls = result.trackedUrls || [];
     const container = document.getElementById('trackedUrls');
     container.innerHTML = ''; // Clear existing entries
 
     trackedUrls.forEach((item, index) => {
+      console.log("Processing item:", item); // Debug each item
       const div = document.createElement('div');
       const title = document.createElement('span');
       title.textContent = `${item.artist} on ${item.website}`;
@@ -62,7 +66,6 @@ function displayTrackedUrls() {
     });
   });
 }
-
 
 function togglePriceDisplay(index) {
   const priceList = document.getElementById(`priceList-${index}`);
