@@ -1,15 +1,22 @@
 document.getElementById('trackForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const url = document.getElementById('urlInput').value;
+  const artist = document.getElementById('artistName').value;
+  const website = document.getElementById('websiteName').value;
+
+  const entry = { url, artist, website };
+
   chrome.storage.local.get(['trackedUrls'], (result) => {
     const trackedUrls = result.trackedUrls || [];
-    if (!trackedUrls.includes(url)) {
-      trackedUrls.push(url);
+    if (!trackedUrls.some(item => item.url === url)) {
+      trackedUrls.push(entry);
       chrome.storage.local.set({ trackedUrls: trackedUrls }, () => {
         displayTrackedUrls();
       });
     }
   });
+  document.getElementById('artistName').value = '';
+  document.getElementById('websiteName').value = '';
   document.getElementById('urlInput').value = '';
 });
 
@@ -20,12 +27,12 @@ function displayTrackedUrls() {
     const container = document.getElementById('trackedUrls');
     container.innerHTML = '';
 
-    trackedUrls.forEach(url => {
+    trackedUrls.forEach(item => {
       const div = document.createElement('div');
-      div.innerHTML = `<strong>${url}</strong>`;
+      div.innerHTML = `<strong>${item.artist} on ${item.website}</strong>`;
       const list = document.createElement('ul');
 
-      const priceHistory = priceData[url] || [];
+      const priceHistory = priceData[item.url] || [];
       priceHistory.forEach(entry => {
         const li = document.createElement('li');
         li.textContent = `Time: ${entry.timestamp}, Prices: ${entry.prices.join(', ')}`;
@@ -39,5 +46,3 @@ function displayTrackedUrls() {
 }
 
 document.addEventListener('DOMContentLoaded', displayTrackedUrls);
-
-  
