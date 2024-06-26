@@ -24,13 +24,10 @@ document.getElementById('trackForm').addEventListener('submit', (e) => {
 function displayTrackedUrls() {
   chrome.storage.local.get(['trackedUrls', 'priceData'], (result) => {
     const trackedUrls = result.trackedUrls || [];
-    const priceData = result.priceData || {};
     const container = document.getElementById('trackedUrls');
     container.innerHTML = ''; // Clear existing entries
 
     trackedUrls.forEach((item, index) => {
-      if (!item) return; // Skip if the item is undefined or null
-
       const div = document.createElement('div');
       const title = document.createElement('span');
       title.textContent = `${item.artist} on ${item.website}`;
@@ -47,15 +44,18 @@ function displayTrackedUrls() {
       priceList.id = `priceList-${index}`;
       priceList.style.display = 'none';
 
-      // Safely access price history using optional chaining (?.)
-      const priceHistory = priceData[item.url]?.length > 0 ? priceData[item.url] : [];
+      const priceHistory = result.priceData[item.url] || [];
       priceHistory.forEach(entry => {
-        if (!entry) return; // Skip if entry is undefined or null
-
         const li = document.createElement('li');
         li.textContent = `Time: ${entry.timestamp}, Prices: ${entry.prices.join(', ')}`;
         priceList.appendChild(li);
       });
+
+      if (priceHistory.length === 0) {
+        const noDataLi = document.createElement('li');
+        noDataLi.textContent = "No price history available.";
+        priceList.appendChild(noDataLi);
+      }
 
       div.appendChild(priceList);
       container.appendChild(div);
@@ -66,21 +66,25 @@ function displayTrackedUrls() {
 
 function togglePriceDisplay(index) {
   const priceList = document.getElementById(`priceList-${index}`);
-  priceList.style.display = priceList.style.display === 'none' ? 'block' : 'none';
+  if (priceList) {
+    priceList.style.display = priceList.style.display === 'none' ? 'block' : 'none';
+  }
 }
 
 function deleteTracker(index) {
   chrome.storage.local.get(['trackedUrls', 'priceData'], (result) => {
-    const trackedUrls = result.trackedUrls;
-    const priceData = result.priceData;
-    const urlToDelete = trackedUrls[index].url;
+    let trackedUrls = result.trackedUrls || [];
+    let priceData = result.priceData || {};
 
-    trackedUrls.splice(index, 1);
-    delete priceData[urlToDelete];
+    if (trackedUrls.length > index) { // Check to prevent out-of-bound errors
+      const urlToDelete = trackedUrls[index].url;
+      trackedUrls.splice(index, 1); // Remove the item at the specified index
+      delete priceData[urlToDelete]; // Remove associated price data
 
-    chrome.storage.local.set({ trackedUrls, priceData }, () => {
-      displayTrackedUrls();
-    });
+      chrome.storage.local.set({ trackedUrls, priceData }, () => {
+        displayTrackedUrls(); // Refresh the list after deleting
+      });
+    }
   });
 }
 
