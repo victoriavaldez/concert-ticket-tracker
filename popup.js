@@ -8,6 +8,7 @@ document.getElementById('trackForm').addEventListener('submit', (e) => {
       chrome.storage.local.set({ trackedUrls: trackedUrls }, () => {
         displayTrackedUrls();
       });
+    }
   });
   document.getElementById('urlInput').value = '';
 });
