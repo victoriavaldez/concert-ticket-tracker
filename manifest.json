@@ -1,5 +1,5 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 4,
     "name": "Concert Ticket Price Tracker",
     "version": "1.0",
     "permissions": [
