@@ -25,3 +25,24 @@ function checkPrices() {
         });
     });
 }
+
+function compareAndNotify(url, newPrices) {
+    chrome.storage.local.get(['priceData'], (result) => {
+        const priceData = result.priceData || {};
+        const oldPrices = priceData[url] || [];
+
+        const hasChanges = oldPrices.length === 0 || oldPrices.some((price, index) => price !== newPrices[index]);
+
+        if(hasChanges){
+            priceData[url] = newPrices;
+            chrome.storage.local.set({priceData: priceData}, () => {
+                chrome.notifications.create({
+                    type: 'basic',
+                    iconUrl: 'images/icon128.png',
+                    title: 'Price Alert!',
+                    message: 'Price changes detected on ${url}'
+                });
+            });
+        }
+    });
+}
