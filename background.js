@@ -27,22 +27,28 @@ function checkPrices() {
 }
 
 function compareAndNotify(url, newPrices) {
+    const timestamp = new Date().toISOString(); // Get current time in ISO format
     chrome.storage.local.get(['priceData'], (result) => {
-        const priceData = result.priceData || {};
-        const oldPrices = priceData[url] || [];
-
-        const hasChanges = oldPrices.length === 0 || oldPrices.some((price, index) => price !== newPrices[index]);
-
-        if(hasChanges){
-            priceData[url] = newPrices;
-            chrome.storage.local.set({priceData: priceData}, () => {
-                chrome.notifications.create({
-                    type: 'basic',
-                    iconUrl: 'images/icon128.png',
-                    title: 'Price Alert!',
-                    message: 'Price changes detected on ${url}'
-                });
-            });
-        }
+      const priceData = result.priceData || {};
+      const priceHistory = priceData[url] || [];
+  
+      const lastPriceEntry = priceHistory[priceHistory.length - 1] || {};
+      const lastPrices = lastPriceEntry.prices || [];
+  
+      const hasChanges = !lastPrices.length || lastPrices.some((price, index) => price !== newPrices[index]);
+  
+      if (hasChanges) {
+        priceHistory.push({ timestamp: timestamp, prices: newPrices }); // Store new price entry with timestamp
+        priceData[url] = priceHistory;
+        chrome.storage.local.set({ priceData: priceData }, () => {
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'images/icon128.png',
+            title: 'Price Alert!',
+            message: `Price changes detected on ${url}`
+          });
+        });
+      }
     });
-}
+  }
+  
